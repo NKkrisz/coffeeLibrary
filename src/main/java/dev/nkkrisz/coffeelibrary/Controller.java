@@ -12,6 +12,7 @@ public class Controller {
     @FXML private ListView<Book> bookListView;
     @FXML private ListView<Borrower> borrowerListView;
     @FXML private ListView<Loan> loanListView;
+    @FXML private TextField searchField;
 
     private ObservableList<Book> books = FXCollections.observableArrayList();
     private ObservableList<Borrower> borrowers = FXCollections.observableArrayList();
@@ -29,6 +30,16 @@ public class Controller {
                 clearBookFields();
             }
         });
+
+        loadSampleBooks();
+    }
+
+    private void loadSampleBooks() {
+        books.add(new Book("1984", "George Orwell", "9780451524935", 5));
+        books.add(new Book("To Kill a Mockingbird", "Harper Lee", "9780061120084", 3));
+        books.add(new Book("The Great Gatsby", "F. Scott Fitzgerald", "9780743273565", 4));
+        books.add(new Book("Moby Dick", "Herman Melville", "9781503280786", 2));
+        books.add(new Book("War and Peace", "Leo Tolstoy", "9781420954302", 1));
     }
 
     private void populateBookFields(Book book) {
@@ -94,16 +105,21 @@ public class Controller {
         Book selectedBook = bookListView.getSelectionModel().getSelectedItem();
         if (selectedBook != null) {
             books.remove(selectedBook);
-            clearBookFields(); // Clear fields after deleting the selected book
+            clearBookFields();
         }
     }
 
     @FXML
     private void searchBookByTitle() {
-        String title = titleField.getText().toLowerCase();
-        bookListView.setItems(FXCollections.observableArrayList(
-                books.filtered(book -> book.getTitle().toLowerCase().contains(title))
-        ));
+        String searchTerm = searchField.getText().toLowerCase();
+        if (searchTerm.isEmpty()) {
+            bookListView.setItems(books);
+        } else {
+            ObservableList<Book> filteredBooks = FXCollections.observableArrayList(
+                    books.filtered(book -> book.getTitle().toLowerCase().contains(searchTerm))
+            );
+            bookListView.setItems(filteredBooks);
+        }
     }
 
     @FXML
