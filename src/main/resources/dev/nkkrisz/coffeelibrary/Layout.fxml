@@ -1,16 +1,42 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
-
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Button?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="dev.nkkrisz.coffeelibrary.Controller">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-    </padding>
-
-    <Label fx:id="welcomeText"/>
-    <Button text="Button" onAction="#onHelloButtonClick"/>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.DatePicker?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="dev.nkkrisz.coffeelibrary.Controller" spacing="10" alignment="CENTER">
+    <Label text="Library Management System" />
+    <HBox spacing="10">
+        <VBox spacing="5">
+            <TextField fx:id="titleField" promptText="Title"/>
+            <TextField fx:id="authorField" promptText="Author"/>
+            <TextField fx:id="isbnField" promptText="ISBN"/>
+            <TextField fx:id="copiesField" promptText="Copies"/>
+            <Button text="Add Book" onAction="#addBook"/>
+            <Button text="Edit Book" onAction="#editBook"/>
+            <Button text="Delete Book" onAction="#deleteBook"/>
+            <Button text="Search by Title" onAction="#searchBookByTitle"/>
+        </VBox>
+        <ListView fx:id="bookListView"/>
+    </HBox>
+    <HBox spacing="10">
+        <VBox spacing="5">
+            <TextField fx:id="borrowerNameField" promptText="Borrower Name"/>
+            <TextField fx:id="borrowerContactField" promptText="Contact"/>
+            <Button text="Add Borrower" onAction="#addBorrower"/>
+            <Button text="Edit Borrower" onAction="#editBorrower"/>
+            <Button text="Delete Borrower" onAction="#deleteBorrower"/>
+        </VBox>
+        <ListView fx:id="borrowerListView"/>
+    </HBox>
+    <HBox spacing="10">
+        <VBox spacing="5">
+            <DatePicker fx:id="loanStartDate" promptText="Loan Start Date"/>
+            <DatePicker fx:id="loanEndDate" promptText="Loan End Date"/>
+            <Button text="Add Loan" onAction="#addLoan"/>
+        </VBox>
+        <ListView fx:id="loanListView"/>
+    </HBox>
 </VBox>
