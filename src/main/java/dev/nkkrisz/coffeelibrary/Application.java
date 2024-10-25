@@ -10,7 +10,7 @@ public class Application extends javafx.application.Application {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("Layout.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Library Management System");
+        primaryStage.setTitle("CoffeeLibrary");
         primaryStage.show();
     }
 

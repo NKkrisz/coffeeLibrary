@@ -15,14 +15,18 @@ public class Book {
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
     public String getAuthor() { return author; }
     public void setAuthor(String author) { this.author = author; }
+
     public String getIsbn() { return isbn; }
     public void setIsbn(String isbn) { this.isbn = isbn; }
+
     public int getCopies() { return copies; }
     public void setCopies(int copies) { this.copies = copies; }
 
     @Override
-    public String toString() { return title + " by " + author; }
+    public String toString() {
+        return String.format("%s by %s (ISBN: %s, Copies: %d)", title, author, isbn, copies);
+    }
 }
-

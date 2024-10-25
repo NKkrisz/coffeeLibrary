@@ -21,32 +21,81 @@ public class Controller {
         bookListView.setItems(books);
         borrowerListView.setItems(borrowers);
         loanListView.setItems(loans);
+
+        bookListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                populateBookFields(newValue);
+            } else {
+                clearBookFields();
+            }
+        });
+    }
+
+    private void populateBookFields(Book book) {
+        titleField.setText(book.getTitle());
+        authorField.setText(book.getAuthor());
+        isbnField.setText(book.getIsbn());
+        copiesField.setText(String.valueOf(book.getCopies()));
     }
 
     @FXML
     private void addBook() {
-        Book book = new Book(titleField.getText(), authorField.getText(), isbnField.getText(), Integer.parseInt(copiesField.getText()));
-        books.add(book);
-        clearBookFields();
+        if (isBookInputValid()) {
+            Book book = new Book(titleField.getText(), authorField.getText(), isbnField.getText(), Integer.parseInt(copiesField.getText()));
+            books.add(book);
+            clearBookFields();
+        } else {
+            showAlert("Invalid Input", "Please fill in all fields correctly.");
+        }
+    }
+
+    private boolean isBookInputValid() {
+        return !titleField.getText().isEmpty() &&
+                !authorField.getText().isEmpty() &&
+                !isbnField.getText().isEmpty() &&
+                !copiesField.getText().isEmpty() &&
+                isNumeric(copiesField.getText());
+    }
+
+    private boolean isNumeric(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     @FXML
     private void editBook() {
         Book selectedBook = bookListView.getSelectionModel().getSelectedItem();
-        if (selectedBook != null) {
+        if (selectedBook != null && isBookInputValid()) {
             selectedBook.setTitle(titleField.getText());
             selectedBook.setAuthor(authorField.getText());
             selectedBook.setIsbn(isbnField.getText());
             selectedBook.setCopies(Integer.parseInt(copiesField.getText()));
             bookListView.refresh();
             clearBookFields();
+        } else {
+            showAlert("Invalid Input", "Please fill in all fields correctly.");
         }
     }
 
     @FXML
     private void deleteBook() {
         Book selectedBook = bookListView.getSelectionModel().getSelectedItem();
-        if (selectedBook != null) books.remove(selectedBook);
+        if (selectedBook != null) {
+            books.remove(selectedBook);
+            clearBookFields(); // Clear fields after deleting the selected book
+        }
     }
 
     @FXML
