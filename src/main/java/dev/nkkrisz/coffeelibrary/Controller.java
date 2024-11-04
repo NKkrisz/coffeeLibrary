@@ -4,6 +4,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
+import java.time.LocalDate;
 
 public class Controller {
     @FXML private TextField titleField, authorField, isbnField, copiesField;
@@ -13,6 +15,9 @@ public class Controller {
     @FXML private ListView<Borrower> borrowerListView;
     @FXML private ListView<Loan> loanListView;
     @FXML private TextField searchField;
+    @FXML private ComboBox<Book> bookComboBox;
+    @FXML private ComboBox<Borrower> borrowerComboBox;
+    @FXML private Button editLoanButton;
 
     private ObservableList<Book> books = FXCollections.observableArrayList();
     private ObservableList<Borrower> borrowers = FXCollections.observableArrayList();
@@ -22,24 +27,50 @@ public class Controller {
         bookListView.setItems(books);
         borrowerListView.setItems(borrowers);
         loanListView.setItems(loans);
+        bookComboBox.setItems(books);
+        borrowerComboBox.setItems(borrowers);
 
         bookListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                populateBookFields(newValue);
-            } else {
-                clearBookFields();
-            }
+            if (newValue != null) populateBookFields(newValue);
+            else clearBookFields();
+        });
+
+        borrowerListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) populateBorrowerFields(newValue);
+            else clearBorrowerFields();
+        });
+
+        loanListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) populateLoanFields(newValue);
+            else clearLoanFields();
         });
 
         loadSampleBooks();
+        loadSampleBorrowers();
+
+        // Disable Edit Loan button initially
+        editLoanButton.setDisable(true);
+
+        // Enable the Edit button only when a loan is selected
+        loanListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            editLoanButton.setDisable(newValue == null);
+        });
     }
 
     private void loadSampleBooks() {
-        books.add(new Book("1984", "George Orwell", "9780451524935", 5));
-        books.add(new Book("To Kill a Mockingbird", "Harper Lee", "9780061120084", 3));
-        books.add(new Book("The Great Gatsby", "F. Scott Fitzgerald", "9780743273565", 4));
-        books.add(new Book("Moby Dick", "Herman Melville", "9781503280786", 2));
-        books.add(new Book("War and Peace", "Leo Tolstoy", "9781420954302", 1));
+        books.addAll(
+                new Book("1984", "George Orwell", "9780451524935", 5),
+                new Book("To Kill a Mockingbird", "Harper Lee", "9780061120084", 3)
+                // Additional books if needed
+        );
+    }
+
+    private void loadSampleBorrowers() {
+        borrowers.addAll(
+                new Borrower("Alice", "alice@example.com"),
+                new Borrower("Bob", "bob@example.com")
+                // Additional borrowers if needed
+        );
     }
 
     private void populateBookFields(Book book) {
@@ -47,6 +78,18 @@ public class Controller {
         authorField.setText(book.getAuthor());
         isbnField.setText(book.getIsbn());
         copiesField.setText(String.valueOf(book.getCopies()));
+    }
+
+    private void populateBorrowerFields(Borrower borrower) {
+        borrowerNameField.setText(borrower.getName());
+        borrowerContactField.setText(borrower.getContact());
+    }
+
+    private void populateLoanFields(Loan loan) {
+        bookComboBox.getSelectionModel().select(loan.getBook());
+        borrowerComboBox.getSelectionModel().select(loan.getBorrower());
+        loanStartDate.setValue(loan.getStartDate());
+        loanEndDate.setValue(loan.getEndDate());
     }
 
     @FXML
@@ -58,31 +101,6 @@ public class Controller {
         } else {
             showAlert("Invalid Input", "Please fill in all fields correctly.");
         }
-    }
-
-    private boolean isBookInputValid() {
-        return !titleField.getText().isEmpty() &&
-                !authorField.getText().isEmpty() &&
-                !isbnField.getText().isEmpty() &&
-                !copiesField.getText().isEmpty() &&
-                isNumeric(copiesField.getText());
-    }
-
-    private boolean isNumeric(String str) {
-        try {
-            Integer.parseInt(str);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 
     @FXML
@@ -110,7 +128,7 @@ public class Controller {
     }
 
     @FXML
-    private void searchBookByTitle() {
+    private void searchBookByTitle(KeyEvent event) {
         String searchTerm = searchField.getText().toLowerCase();
         if (searchTerm.isEmpty()) {
             bookListView.setItems(books);
@@ -148,13 +166,76 @@ public class Controller {
 
     @FXML
     private void addLoan() {
-        Borrower selectedBorrower = borrowerListView.getSelectionModel().getSelectedItem();
-        Book selectedBook = bookListView.getSelectionModel().getSelectedItem();
-        if (selectedBorrower != null && selectedBook != null) {
-            Loan loan = new Loan(selectedBorrower, selectedBook, loanStartDate.getValue(), loanEndDate.getValue());
-            loans.add(loan);
+        Book selectedBook = bookComboBox.getSelectionModel().getSelectedItem();
+        Borrower selectedBorrower = borrowerComboBox.getSelectionModel().getSelectedItem();
+
+        if (selectedBook != null && selectedBorrower != null && isLoanDateValid()) {
+            if (selectedBook.getCopies() > 0) {
+                Loan loan = new Loan(selectedBorrower, selectedBook, loanStartDate.getValue(), loanEndDate.getValue());
+                loans.add(loan);
+                selectedBook.setCopies(selectedBook.getCopies() - 1);
+                bookListView.refresh();
+                clearLoanFields();
+            } else {
+                showAlert("Unavailable", "No copies of the selected book are available.");
+            }
+        } else {
+            showAlert("Invalid Input", "Please select a book, a borrower, and provide valid loan dates.");
+        }
+    }
+
+    @FXML
+    private void editLoan() {
+        Loan selectedLoan = loanListView.getSelectionModel().getSelectedItem();
+        Book selectedBook = bookComboBox.getSelectionModel().getSelectedItem();
+        Borrower selectedBorrower = borrowerComboBox.getSelectionModel().getSelectedItem();
+
+        if (selectedLoan != null && selectedBook != null && selectedBorrower != null && isLoanDateValid()) {
+            // Restore the book's available copies before updating the loan
+            selectedLoan.getBook().setCopies(selectedLoan.getBook().getCopies() + 1); // Return the previous book copy
+
+            // Update loan properties
+            selectedLoan.setBook(selectedBook);
+            selectedLoan.setBorrower(selectedBorrower);
+            selectedLoan.setStartDate(loanStartDate.getValue());
+            selectedLoan.setEndDate(loanEndDate.getValue());
+
+            // Deduct a copy from the new selected book
+            selectedBook.setCopies(selectedBook.getCopies() - 1);
+            loanListView.refresh(); // Refresh loan list view
+            bookListView.refresh();  // Refresh book list view
+            clearLoanFields();
+            showAlert("Success", "Loan edited successfully.");
+        } else {
+            showAlert("Invalid Input", "Please select a loan, book, borrower, and valid dates to edit.");
+        }
+    }
+
+    @FXML
+    private void deleteLoan() {
+        Loan selectedLoan = loanListView.getSelectionModel().getSelectedItem();
+        if (selectedLoan != null) {
+            selectedLoan.getBook().setCopies(selectedLoan.getBook().getCopies() + 1); // Return book copy
+            loans.remove(selectedLoan);
+            bookListView.refresh(); // Refresh the book list
             clearLoanFields();
         }
+    }
+
+    private boolean isLoanDateValid() {
+        if (loanStartDate.getValue() == null || loanEndDate.getValue() == null) return false;
+        if (loanEndDate.getValue().isBefore(loanStartDate.getValue())) {
+            showAlert("Invalid Date", "End date cannot be earlier than start date.");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isBookInputValid() {
+        return !titleField.getText().isEmpty() &&
+                !authorField.getText().isEmpty() &&
+                !isbnField.getText().isEmpty() &&
+                !copiesField.getText().isEmpty();
     }
 
     private void clearBookFields() {
@@ -170,7 +251,17 @@ public class Controller {
     }
 
     private void clearLoanFields() {
+        bookComboBox.getSelectionModel().clearSelection();
+        borrowerComboBox.getSelectionModel().clearSelection();
         loanStartDate.setValue(null);
         loanEndDate.setValue(null);
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

@@ -53,11 +53,21 @@
         <VBox alignment="CENTER" spacing="10">
             <HBox spacing="10">
                 <VBox spacing="5">
+                    <!-- Add ComboBox controls for selecting a book and borrower -->
+                    <Label text="Select Book" />
+                    <ComboBox fx:id="bookComboBox" promptText="Select a Book" />
+
+                    <Label text="Select Borrower" />
+                    <ComboBox fx:id="borrowerComboBox" promptText="Select a Borrower" />
+
                     <Label text="Loan Start Date" />
                     <DatePicker fx:id="loanStartDate" promptText="Loan Start Date" />
                     <Label text="Loan End Date" />
                     <DatePicker fx:id="loanEndDate" promptText="Loan End Date" />
+
                     <Button onAction="#addLoan" text="Add Loan" />
+                    <Button fx:id="editLoanButton" text="Edit Loan" onAction="#editLoan"/>
+                    <Button fx:id="deleteLoanButton" text="Delete Loan" onAction="#deleteLoan"/>
                     <padding>
                         <Insets left="5.0" top="5.0" />
                     </padding>
